@@ -19,5 +19,23 @@ class MainActivity : AppCompatActivity() {
         viewModel = MainViewModel()
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+        
+        viewModel.messageHistory.observeForever { messages ->
+            displayMessageHistory(messages)
+        }
+    }
+
+    private fun displayMessageHistory(messages: List<String>) {
+        binding.linearLayout.removeAllViews()
+
+        messages.forEach { message ->
+            val textView = TextView(this).apply {
+                text = message
+                textSize = 14f
+                setPadding(8, 4, 8, 4)
+                setTextColor(resources.getColor(android.R.color.black, null))
+            }
+            binding.linearLayout.addView(textView)
+        }
     }
 }
