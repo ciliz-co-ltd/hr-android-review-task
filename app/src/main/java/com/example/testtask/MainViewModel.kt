@@ -21,23 +21,24 @@ class MainViewModel : BaseObservable() {
     data class Message(var type: String, var ts: Long)
 
     private val history = mutableListOf<Message>()
-    private val messageStrings = mutableListOf<String>()
 
     private var filter: Boolean = true
 
     private val prettyPongs get() = history.filter { it.type == "pongs" }
 
+    private val prettyAll get() = history.map { "${it.type} at ${it.ts}" }
+
     init {
         CoroutineScope(Dispatchers.Main).launch {
             connectionManager.responses.collect { response ->
-                val message = when (response) {
-                    is PingResponse -> "${response.type} at ${response.timestamp}"
-                    is PongResponse -> "${response.type} at ${response.timestamp}"
+                when (response) {
+                    is PingResponse,
+                    is PongResponse -> {
+                        history.add(Message(response.type, response.timestamp))
+                        messageHistory.value = prettyAll
+                    }
                     else -> "unknown message"
                 }
-                history.add(Message(response.type, response.timestamp))
-                messageStrings.add(message)
-                messageHistory.value = messageStrings.toList()
             }
         }
 
@@ -82,7 +83,7 @@ class MainViewModel : BaseObservable() {
 
             messageHistory.value = temp.map { "${it.type} at ${it.ts}" }
         } else {
-            messageHistory.value = messageStrings
+            messageHistory.value = prettyAll
         }
         filter = !filter
     }
